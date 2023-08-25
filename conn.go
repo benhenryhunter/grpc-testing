@@ -16,12 +16,12 @@ func NewConnection(host, authToken string) (*chan *SubmitBlockRequest, error) {
 		return nil, err
 	}
 	bodyChan := make(chan *SubmitBlockRequest, 100)
-	go ConnectToGRPCService(host, authToken, &bodyChan, conn)
+	go ConnectToGRPCService(host, authToken, bodyChan, conn)
 
 	return &bodyChan, nil
 }
 
-func ConnectToGRPCService(host, authToken string, bodyChan *chan *SubmitBlockRequest, conn *grpc.ClientConn) {
+func ConnectToGRPCService(host, authToken string, bodyChan chan *SubmitBlockRequest, conn *grpc.ClientConn) {
 	if conn == nil {
 		newConn, err := grpc.Dial(host, grpc.WithInsecure())
 		if err != nil {
@@ -47,7 +47,7 @@ func ConnectToGRPCService(host, authToken string, bodyChan *chan *SubmitBlockReq
 
 	client := NewRelayClient(conn)
 	for {
-		body := <-*bodyChan
+		body := <-bodyChan
 
 		_, err := client.SubmitBlock(ctx, body)
 		if err != nil {
